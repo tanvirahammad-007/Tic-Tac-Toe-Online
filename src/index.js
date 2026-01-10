@@ -1,6 +1,114 @@
 // Firebase Integration
 import { db } from './firebase-config.js';
 
+// Socket.io connection - UPDATE THIS URL WITH YOUR RENDER BACKEND URL
+const BACKEND_URL = 'https://your-backend-name.onrender.com'; // ⚠️ CHANGE THIS!
+let socket = null;
+
+// Initialize Socket.io connection
+function initSocket() {
+    if (!socket) {
+        socket = io(BACKEND_URL, {
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionAttempts: 5
+        });
+
+        // Connection event handlers
+        socket.on('connect', () => {
+            console.log('Connected to server!');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            alert('Failed to connect to game server. Please try again later.');
+        });
+
+        // Game event handlers
+        setupSocketEventHandlers();
+    }
+    return socket;
+}
+
+// Setup all socket event handlers
+function setupSocketEventHandlers() {
+    // Room created successfully
+    socket.on('roomCreated', ({ roomCode, symbol }) => {
+        gameState.gameCode = roomCode;
+        gameState.mySymbol = symbol;
+        gameState.isHost = true;
+        
+        document.getElementById('gameCodeDisplay').textContent = roomCode;
+        document.getElementById('gameCodeSection').classList.remove('hidden');
+    });
+
+    // Player joined the room
+    socket.on('playerJoined', ({ players }) => {
+        if (players.length === 2) {
+            gameState.p2Name = players[1].name;
+            startOnlineGame();
+        }
+    });
+
+    // Game started
+    socket.on('gameStart', ({ players, currentTurn }) => {
+        gameState.currentPlayer = currentTurn;
+        startOnlineGame();
+    });
+
+    // Opponent made a move
+    socket.on('moveMade', ({ board, currentTurn, moveIndex }) => {
+        gameState.board = board;
+        gameState.currentPlayer = currentTurn;
+        renderBoard();
+        
+        // Check for winner
+        const winner = checkWin(gameState.board, currentTurn === 'X' ? 'O' : 'X');
+        if (winner) {
+            endGame(currentTurn === 'X' ? 'O' : 'X', winner.combo);
+        } else if (gameState.board.every(b => b)) {
+            endGame('draw');
+        }
+    });
+
+    // Game over
+    socket.on('gameOver', ({ winner }) => {
+        if (winner === 'draw') {
+            endGame('draw');
+        } else {
+            const winCombo = findWinningCombo(gameState.board, winner);
+            endGame(winner, winCombo);
+        }
+    });
+
+    // Error handling
+    socket.on('error', (message) => {
+        alert(message);
+        showOnlineMenu();
+    });
+
+    // Opponent disconnected
+    socket.on('opponentDisconnected', () => {
+        alert('Your opponent has disconnected!');
+        cleanupOnlineGame();
+        showMenu();
+    });
+}
+
+// Find winning combination
+function findWinningCombo(board, player) {
+    for (let combo of winCombos) {
+        if (combo.every(idx => board[idx] === player)) {
+            return combo;
+        }
+    }
+    return null;
+}
+
 // Game State
 const gameState = {
     board: Array(9).fill(null),
@@ -24,8 +132,7 @@ const gameState = {
     gameCode: null,
     isHost: false,
     mySymbol: null,
-    opponentName: null,
-    checkInterval: null
+    opponentName: null
 };
 
 // Win Combinations
@@ -45,9 +152,6 @@ function getBgMusicElement() {
     }
     return bgMusic;
 }
-
-// Check if storage API is available
-const hasStorage = typeof window !== 'undefined' && window.localStorage;
 
 // Initialize
 window.addEventListener('load', () => {
@@ -111,13 +215,9 @@ function showMenu() {
     gameState.fromGame = false;
     
     // Clean up online game
-    if (gameState.checkInterval) {
-        clearInterval(gameState.checkInterval);
-        gameState.checkInterval = null;
-    }
-    
-    if (gameState.isOnline && gameState.gameCode) {
-        cleanupOnlineGame();
+    if (gameState.isOnline && socket) {
+        socket.disconnect();
+        socket = null;
     }
     
     gameState.isOnline = false;
@@ -177,10 +277,6 @@ function showAbout() {
 }
 
 function showOnlineMenu() {
-    if (!hasStorage) {
-        alert('Online multiplayer is not available in this environment. Please use the standalone version of the game.');
-        return;
-    }
     hideAll();
     document.getElementById('onlineMenuScreen').classList.remove('hidden');
 }
@@ -290,9 +386,14 @@ function handleMove(i) {
 
     // For online games, send move to server
     if (gameState.isOnline) {
-        sendOnlineMove(i);
+        socket.emit('makeMove', {
+            roomCode: gameState.gameCode,
+            index: i
+        });
+        return; // Server will handle game logic for online games
     }
 
+    // Local game logic
     const winner = checkWin(gameState.board, gameState.currentPlayer);
     if (winner) {
         endGame(gameState.currentPlayer, winner.combo);
@@ -304,31 +405,6 @@ function handleMove(i) {
         if (gameState.gameMode === 'computer' && gameState.currentPlayer === 'O') {
             setTimeout(computerMove, 800);
         }
-    }
-}
-
-async function sendOnlineMove(moveIndex) {
-    if (!hasStorage) return;
-    
-    try {
-        const gameDataStr = localStorage.getItem(`game_${gameState.gameCode}`);
-        if (gameDataStr) {
-            const gameData = JSON.parse(gameDataStr);
-            gameData.board = [...gameState.board];
-            gameData.currentPlayer = gameState.currentPlayer === 'X' ? 'O' : 'X';
-            
-            if (gameState.isHost) {
-                gameData.hostMove = moveIndex;
-                gameData.guestMove = null;
-            } else {
-                gameData.guestMove = moveIndex;
-                gameData.hostMove = null;
-            }
-            
-            localStorage.setItem(`game_${gameState.gameCode}`, JSON.stringify(gameData));
-        }
-    } catch (error) {
-        console.error('Error sending move:', error);
     }
 }
 
@@ -539,61 +615,25 @@ function resetStats() {
     }
 }
 
-// Online Game Functions
-function generateGameCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
-
+// Online Game Functions - Now using Socket.io
 async function createOnlineGame() {
-    if (!hasStorage) {
-        alert('Local storage not available. Online multiplayer requires a browser with localStorage support.');
-        return;
-    }
-
     const hostName = document.getElementById('hostNameInput').value.trim();
     if (!hostName) {
         alert('Please enter your name!');
         return;
     }
 
+    // Initialize socket connection
+    initSocket();
+
+    gameState.isOnline = true;
+    gameState.p1Name = hostName;
+
     hideAll();
     document.getElementById('createGameScreen').classList.remove('hidden');
-    document.getElementById('gameCodeSection').classList.remove('hidden');
 
-    gameState.gameCode = generateGameCode();
-    gameState.isHost = true;
-    gameState.mySymbol = 'X';
-    gameState.p1Name = hostName;
-    gameState.isOnline = true;
-
-    document.getElementById('gameCodeDisplay').textContent = gameState.gameCode;
-
-    // Store game data in localStorage
-    try {
-        const gameData = {
-            host: hostName,
-            board: Array(9).fill(null),
-            currentPlayer: 'X',
-            guest: null,
-            status: 'waiting',
-            hostMove: null,
-            guestMove: null,
-            timestamp: Date.now()
-        };
-        localStorage.setItem(`game_${gameState.gameCode}`, JSON.stringify(gameData));
-
-        // Start checking for opponent
-        startCheckingForOpponent();
-    } catch (error) {
-        console.error('Error creating game:', error);
-        alert('Failed to create game. Error: ' + error.message);
-        showOnlineMenu();
-    }
+    // Emit create room event to server
+    socket.emit('createRoom', hostName);
 }
 
 function copyGameCode() {
@@ -623,24 +663,6 @@ function fallbackCopyCode(code) {
     document.body.removeChild(tempInput);
 }
 
-async function startCheckingForOpponent() {
-    gameState.checkInterval = setInterval(async () => {
-        try {
-            const gameDataStr = localStorage.getItem(`game_${gameState.gameCode}`);
-            if (gameDataStr) {
-                const gameData = JSON.parse(gameDataStr);
-                if (gameData.guest && gameData.status === 'playing') {
-                    clearInterval(gameState.checkInterval);
-                    gameState.p2Name = gameData.guest;
-                    startOnlineGame();
-                }
-            }
-        } catch (error) {
-            console.error('Error checking for opponent:', error);
-        }
-    }, 1000);
-}
-
 function showJoinGame() {
     hideAll();
     document.getElementById('joinGameScreen').classList.remove('hidden');
@@ -648,11 +670,6 @@ function showJoinGame() {
 }
 
 async function joinOnlineGame() {
-    if (!hasStorage) {
-        showError('Local storage not available. Online multiplayer requires a browser with localStorage support.');
-        return;
-    }
-
     const guestName = document.getElementById('joinNameInput').value.trim();
     const code = document.getElementById('gameCodeInput').value.trim().toUpperCase();
 
@@ -666,39 +683,16 @@ async function joinOnlineGame() {
         return;
     }
 
-    try {
-        const gameDataStr = localStorage.getItem(`game_${code}`);
-        
-        if (!gameDataStr) {
-            showError('Game not found! Please check the code.');
-            return;
-        }
+    // Initialize socket connection
+    initSocket();
 
-        const gameData = JSON.parse(gameDataStr);
-        
-        if (gameData.status !== 'waiting') {
-            showError('This game is already in progress!');
-            return;
-        }
+    gameState.isOnline = true;
+    gameState.gameCode = code;
+    gameState.p2Name = guestName;
+    gameState.mySymbol = 'O';
 
-        // Join the game
-        gameData.guest = guestName;
-        gameData.status = 'playing';
-        
-        localStorage.setItem(`game_${code}`, JSON.stringify(gameData));
-
-        gameState.gameCode = code;
-        gameState.isHost = false;
-        gameState.mySymbol = 'O';
-        gameState.p1Name = gameData.host;
-        gameState.p2Name = guestName;
-        gameState.isOnline = true;
-
-        startOnlineGame();
-    } catch (error) {
-        console.error('Error joining game:', error);
-        showError('Failed to join game: ' + error.message);
-    }
+    // Emit join room event to server
+    socket.emit('joinRoom', { roomCode: code, playerName: guestName });
 }
 
 function showError(message) {
@@ -721,9 +715,6 @@ function startOnlineGame() {
 
     // Add online status indicator
     addOnlineStatusIndicator();
-
-    // Start checking for moves
-    startOnlineGameLoop();
 }
 
 function addOnlineStatusIndicator() {
@@ -732,62 +723,25 @@ function addOnlineStatusIndicator() {
 
     const indicator = document.createElement('div');
     indicator.className = 'online-status';
-    indicator.innerHTML = '<span>Online</span>';
-    document.querySelector('.container').appendChild(indicator);
-}
-
-async function startOnlineGameLoop() {
-    gameState.checkInterval = setInterval(async () => {
-        if (gameState.isGameOver) {
-            clearInterval(gameState.checkInterval);
-            return;
-        }
-
-        try {
-            const gameDataStr = localStorage.getItem(`game_${gameState.gameCode}`);
-            if (gameDataStr) {
-                const gameData = JSON.parse(gameDataStr);
-                
-                // Update board if opponent made a move
-                const isMyTurn = (gameState.currentPlayer === gameState.mySymbol);
-                
-                if (!isMyTurn) {
-                    if (gameState.isHost && gameData.guestMove !== null) {
-                        handleOnlineMove(gameData.guestMove, gameData);
-                    } else if (!gameState.isHost && gameData.hostMove !== null) {
-                        handleOnlineMove(gameData.hostMove, gameData);
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error in game loop:', error);
-        }
-    }, 1000);
-}
-
-async function handleOnlineMove(moveIndex, gameData) {
-    if (gameState.board[moveIndex] !== null) return;
-
-    gameState.board[moveIndex] = gameState.currentPlayer;
-    renderBoard();
-
-    const winner = checkWin(gameState.board, gameState.currentPlayer);
-    if (winner) {
-        endGame(gameState.currentPlayer, winner.combo);
-    } else if (gameState.board.every(b => b)) {
-        endGame('draw');
-    } else {
-        gameState.currentPlayer = gameState.currentPlayer === 'X' ? 'O' : 'X';
-    }
+    indicator.innerHTML = '<span>🌐 Online</span>';
+    indicator.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #00ff00;
+        color: #000;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        box-shadow: 0 0 20px #00ff00;
+        z-index: 1000;
+    `;
+    document.body.appendChild(indicator);
 }
 
 async function cleanupOnlineGame() {
-    if (!hasStorage) return;
-    
-    try {
-        localStorage.removeItem(`game_${gameState.gameCode}`);
-    } catch (error) {
-        console.error('Error cleaning up game:', error);
+    if (socket) {
+        socket.emit('leaveRoom', gameState.gameCode);
     }
 }
 
