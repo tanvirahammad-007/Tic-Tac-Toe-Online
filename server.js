@@ -35,6 +35,7 @@ io.on('connection', (socket) => {
         
         socket.join(roomCode);
         socket.emit('roomCreated', { roomCode, symbol: 'X' });
+        console.log(`Room created: ${roomCode} by ${playerName}`);
     });
 
     socket.on('joinRoom', ({ roomCode, playerName }) => {
@@ -53,6 +54,8 @@ io.on('connection', (socket) => {
         room.players.push({ id: socket.id, name: playerName, symbol: 'O' });
         room.gameStarted = true;
         socket.join(roomCode);
+        
+        console.log(`${playerName} joined room: ${roomCode}`);
         
         io.to(roomCode).emit('gameStart', {
             players: room.players,
@@ -88,6 +91,17 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('requestRematch', ({ roomCode }) => {
+        const room = rooms.get(roomCode);
+        if (!room) return;
+
+        room.board = Array(9).fill(null);
+        room.currentTurn = 'X';
+        room.gameStarted = true;
+
+        io.to(roomCode).emit('rematch');
+    });
+
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
         // Clean up rooms
@@ -95,6 +109,9 @@ io.on('connection', (socket) => {
             room.players = room.players.filter(p => p.id !== socket.id);
             if (room.players.length === 0) {
                 rooms.delete(code);
+            } else {
+                // Notify remaining player
+                io.to(code).emit('opponentDisconnected');
             }
         }
     });

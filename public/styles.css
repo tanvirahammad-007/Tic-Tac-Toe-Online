@@ -130,7 +130,7 @@ input[type="text"]:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     padding: 1rem;
     background: rgba(10, 14, 39, 0.8);
     border: 2px solid #00d9ff;
@@ -146,17 +146,81 @@ input[type="text"]:focus {
 
 .score-display {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     align-items: center;
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #00d9ff;
 }
 
-#scoreDisplay {
+.player-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 100px;
+}
+
+.player-info span:first-child {
+    font-size: 0.9rem;
+    color: #00d9ff;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 100px;
+}
+
+.player-info span:last-child {
     font-size: 1.5rem;
     font-weight: bold;
     color: #ff6b9d;
     text-shadow: 0 0 10px #ff6b9d;
+}
+
+.vs-text {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #00d9ff;
+    text-shadow: 0 0 10px #00d9ff;
+}
+
+/* Turn Indicator */
+.turn-indicator {
+    margin-bottom: 1rem;
+}
+
+.turn-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(10, 14, 39, 0.9);
+    border: 2px solid #00d9ff;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.4);
+}
+
+.turn-display #turnText {
+    font-size: 1.2rem;
+    color: #00d9ff;
+    text-shadow: 0 0 10px #00d9ff;
+}
+
+.turn-symbol {
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 0 0 20px currentColor;
+}
+
+@keyframes turnPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(0, 217, 255, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(0, 217, 255, 0.6);
+    }
 }
 
 /* Board */
@@ -314,6 +378,70 @@ input[type="text"]:focus {
     left: 30px;
 }
 
+/* Volume Control */
+.volume-setting {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+input[type="range"] {
+    flex: 1;
+    height: 8px;
+    background: rgba(0, 217, 255, 0.2);
+    border-radius: 5px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #00d9ff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px #00d9ff;
+    transition: all 0.3s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 20px #00d9ff;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #00d9ff;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px #00d9ff;
+    transition: all 0.3s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 20px #00d9ff;
+}
+
+#volumePercent {
+    min-width: 50px;
+    text-align: center;
+    font-size: 1.1rem;
+    color: #00d9ff;
+    font-weight: bold;
+    text-shadow: 0 0 10px #00d9ff;
+}
+
 /* Game Code Display */
 .game-code {
     font-size: 2.5rem;
@@ -452,6 +580,66 @@ input[type="text"]:focus {
     }
 }
 
+/* About Screen Styling */
+.about-screen {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.about-content {
+    padding: 0;
+    margin-top: 1.5rem;
+}
+
+.about-section {
+    background: rgba(0, 217, 255, 0.1);
+    border: 2px solid #00d9ff;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.about-section:hover {
+    background: rgba(0, 217, 255, 0.15);
+    box-shadow: 0 0 25px rgba(0, 217, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.about-subtitle {
+    color: #00d9ff;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 10px #00d9ff;
+    letter-spacing: 2px;
+}
+
+.about-section p {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.8;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+}
+
+.about-section p:last-child {
+    margin-bottom: 0;
+}
+
+.about-section p strong {
+    color: #00d9ff;
+    text-shadow: 0 0 5px #00d9ff;
+}
+
+.about-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid rgba(0, 217, 255, 0.3);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+}
+
 /* Responsive Design */
 @media (max-width: 600px) {
     h1 {
@@ -481,6 +669,35 @@ input[type="text"]:focus {
 
     .modal-buttons button {
         width: 100%;
+    }
+
+    .score-display {
+        gap: 0.8rem;
+    }
+
+    .player-info {
+        min-width: 70px;
+    }
+
+    .player-info span:first-child {
+        font-size: 0.75rem;
+        max-width: 70px;
+    }
+
+    .player-info span:last-child {
+        font-size: 1.2rem;
+    }
+
+    .vs-text {
+        font-size: 1rem;
+    }
+
+    .turn-display #turnText {
+        font-size: 1rem;
+    }
+
+    .turn-symbol {
+        font-size: 1.5rem;
     }
 }
 
@@ -516,48 +733,4 @@ input[type="text"]:focus {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #00b8d4;
-}
-.about-content {
-    padding: 20px;
-    margin-top: 20px;
-}
-
-.about-section {
-    background: rgba(0, 150, 255, 0.2);
-    border: 2px solid #00d9ff;
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 
-        0 0 15px rgba(0, 217, 255, 0.4),
-        inset 0 0 15px rgba(0, 217, 255, 0.1);
-}
-
-.about-subtitle {
-    color: #00d9ff;
-    font-size: 1.3em;
-    margin-bottom: 15px;
-    text-shadow: 0 0 10px #00d9ff;
-    letter-spacing: 2px;
-}
-
-.about-section p {
-    color: rgba(255, 255, 255, 0.9);
-    line-height: 1.8;
-    margin-bottom: 10px;
-    font-size: 1em;
-}
-
-.about-section p strong {
-    color: #00d9ff;
-    text-shadow: 0 0 5px #00d9ff;
-}
-
-.about-footer {
-    text-align: center;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 2px solid rgba(0, 217, 255, 0.3);
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.9em;
 }

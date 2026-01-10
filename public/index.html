@@ -77,11 +77,23 @@
         <div class="game-header">
             <button onclick="showMenu()">🏠 Home</button>
             <div class="score-display">
-                <span id="p1NameDisplay">Player 1</span>
-                <span id="scoreDisplay">0:0</span>
-                <span id="p2NameDisplay">Player 2</span>
+                <div class="player-info">
+                    <span id="p1NameDisplay">Player 1</span>
+                    <span id="p1Score">0</span>
+                </div>
+                <span class="vs-text">VS</span>
+                <div class="player-info">
+                    <span id="p2NameDisplay">Player 2</span>
+                    <span id="p2Score">0</span>
+                </div>
             </div>
             <button onclick="showSettingsFromGame()">⚙️</button>
+        </div>
+        <div class="turn-indicator">
+            <div id="turnDisplay" class="turn-display">
+                <span id="turnText">Player 1's Turn</span>
+                <span id="turnSymbol" class="turn-symbol">✕</span>
+            </div>
         </div>
         <div id="board" class="board"></div>
     </div>
@@ -103,44 +115,48 @@
                 <span>🔊</span>
             </div>
         </div>
+        <div class="setting-item volume-setting">
+            <span>🔊 Volume</span>
+            <div class="volume-control">
+                <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                <span id="volumePercent">50%</span>
+            </div>
+        </div>
         <button onclick="showStatsFromSettings()">📊 View Statistics</button>
         <button onclick="backFromSettings()">🔙 Back</button>
     </div>
 
-          <!-- About Screen -->
-        <div id="aboutScreen" class="about-screen hidden">
-            <button class="back-btn" onclick="showMenu()">
-                <span class="arrow-icon">←</span>
-            </button>
-            <h2 class="screen-title">About Game</h2>
-            <div class="about-content">
-                <div class="about-section">
-                    <h3 class="about-subtitle">🎮 How to Play</h3>
-                    <p>Tic-Tac-Toe is a classic game for two players. Players take turns marking spaces in a 3×3 grid with X or O. The first player to get three marks in a row (horizontally, vertically, or diagonally) wins the game!</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3 class="about-subtitle">🎯 Game Modes</h3>
-                    <p><strong>VS Computer:</strong> Play against AI with three difficulty levels - Easy, Medium, and Unbeatable!</p>
-                    <p><strong>VS Player (Local):</strong> Challenge your friends in local multiplayer mode.</p>
-                    <p><strong>Online Match:</strong> Play with friends remotely by sharing a game code!</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3 class="about-subtitle">✨ Features</h3>
-                    <p>• Stunning neon pixel-art design</p>
-                    <p>• Track your wins and statistics</p>
-                    <p>• Fully responsive - play on any device</p>
-                    <p>• Smart AI opponent with minimax algorithm</p>
-                    <p>• Real-time online multiplayer with Firebase</p>
-                </div>
-                
-                <div class="about-footer">
-                    <p>Created by Team Believers✨</p>
-                </div>
+    <!-- About Screen -->
+    <div id="aboutScreen" class="about-screen hidden">
+        <h1>About Game</h1>
+        <div class="about-content">
+            <div class="about-section">
+                <h3 class="about-subtitle">🎮 How to Play</h3>
+                <p>Tic-Tac-Toe is a classic game for two players. Players take turns marking spaces in a 3×3 grid with X or O. The first player to get three marks in a row (horizontally, vertically, or diagonally) wins the game!</p>
+            </div>
+            
+            <div class="about-section">
+                <h3 class="about-subtitle">🎯 Game Modes</h3>
+                <p><strong>VS Computer:</strong> Play against AI with three difficulty levels - Easy, Medium, and Unbeatable!</p>
+                <p><strong>VS Player (Local):</strong> Challenge your friends in local multiplayer mode.</p>
+                <p><strong>Online Match:</strong> Play with friends remotely by sharing a game code!</p>
+            </div>
+            
+            <div class="about-section">
+                <h3 class="about-subtitle">✨ Features</h3>
+                <p>• Stunning neon pixel-art design</p>
+                <p>• Track your wins and statistics</p>
+                <p>• Fully responsive - play on any device</p>
+                <p>• Smart AI opponent with minimax algorithm</p>
+                <p>• Real-time online multiplayer with Firebase</p>
+            </div>
+            
+            <div class="about-footer">
+                <p>Created by Team Believers✨</p>
             </div>
         </div>
-
+        <button onclick="showMenu()">🔙 Back</button>
+    </div>
 
     <!-- Win Modal -->
     <div id="winModal" class="modal-overlay hidden">
@@ -214,6 +230,7 @@
                 gameState.board = board;
                 gameState.currentPlayer = currentTurn;
                 renderBoard();
+                updateTurnDisplay();
                 
                 const winner = checkWin(gameState.board, currentTurn === 'X' ? 'O' : 'X');
                 if (winner) {
@@ -232,14 +249,13 @@
                 }
             });
 
-            socket.on('error', (message) => {
-                alert(message);
-                showOnlineMenu();
-            });
-
             socket.on('opponentDisconnected', () => {
                 alert('Your opponent has disconnected!');
                 showMenu();
+            });
+
+            socket.on('rematch', () => {
+                resetGame();
             });
         }
 
@@ -268,7 +284,8 @@
                 draws: 0
             },
             scores: { p1: 0, p2: 0 },
-            musicEnabled: localStorage.getItem('ttt_music') === 'true',
+            musicEnabled: localStorage.getItem('ttt_music') !== 'false',
+            volume: parseInt(localStorage.getItem('ttt_volume')) || 50,
             fromGame: false,
             isOnline: false,
             gameCode: null,
@@ -287,7 +304,38 @@
             showMenu();
             initMusic();
             setupMusicToggle();
+            setupVolumeControl();
+            
+            // Auto-play music on first interaction
+            document.body.addEventListener('click', () => {
+                if (gameState.musicEnabled) {
+                    playMusic();
+                }
+            }, { once: true });
         });
+
+        // Volume Control
+        function setupVolumeControl() {
+            const slider = document.getElementById('volumeSlider');
+            const percent = document.getElementById('volumePercent');
+            
+            slider.value = gameState.volume;
+            percent.textContent = gameState.volume + '%';
+            
+            slider.addEventListener('input', (e) => {
+                gameState.volume = parseInt(e.target.value);
+                percent.textContent = gameState.volume + '%';
+                localStorage.setItem('ttt_volume', gameState.volume);
+                updateVolume();
+            });
+        }
+
+        function updateVolume() {
+            const audio = document.getElementById('bgMusic');
+            if (audio) {
+                audio.volume = gameState.volume / 100;
+            }
+        }
 
         // Music
         function setupMusicToggle() {
@@ -301,6 +349,7 @@
         }
 
         function initMusic() {
+            updateVolume();
             if (gameState.musicEnabled) {
                 playMusic();
             }
@@ -335,6 +384,14 @@
         function showMenu() {
             hideAll();
             gameState.fromGame = false;
+            
+            // Clear input fields
+            document.getElementById('p1Input').value = '';
+            document.getElementById('p2Input').value = '';
+            document.getElementById('hostNameInput').value = '';
+            document.getElementById('joinNameInput').value = '';
+            document.getElementById('gameCodeInput').value = '';
+            
             if (gameState.isOnline && socket) {
                 socket.disconnect();
                 socket = null;
@@ -350,11 +407,15 @@
 
         function showNameInput() {
             hideAll();
+            // Clear input fields when showing
+            document.getElementById('p1Input').value = '';
+            document.getElementById('p2Input').value = '';
             document.getElementById('nameInputScreen').classList.remove('hidden');
         }
 
         function showSettings() {
             hideAll();
+            gameState.fromGame = false;
             document.getElementById('settingsScreen').classList.remove('hidden');
         }
 
@@ -389,17 +450,26 @@
 
         function showOnlineMenu() {
             hideAll();
+            // Clear input fields
+            document.getElementById('hostNameInput').value = '';
+            document.getElementById('joinNameInput').value = '';
+            document.getElementById('gameCodeInput').value = '';
             document.getElementById('onlineMenuScreen').classList.remove('hidden');
         }
 
         function showCreateGame() {
             hideAll();
+            // Clear input field
+            document.getElementById('hostNameInput').value = '';
             document.getElementById('createGameScreen').classList.remove('hidden');
             document.getElementById('gameCodeSection').classList.add('hidden');
         }
 
         function showJoinGame() {
             hideAll();
+            // Clear input fields
+            document.getElementById('joinNameInput').value = '';
+            document.getElementById('gameCodeInput').value = '';
             document.getElementById('joinGameScreen').classList.remove('hidden');
             document.getElementById('joinError').classList.add('hidden');
         }
@@ -407,6 +477,33 @@
         function hideAll() {
             document.querySelectorAll('.menu-screen, .name-input-screen, .game-screen, .stats-screen, .settings-screen, .about-screen')
                 .forEach(s => s.classList.add('hidden'));
+        }
+
+        // Turn Display Update
+        function updateTurnDisplay() {
+            if (gameState.isGameOver) return;
+            
+            const turnText = document.getElementById('turnText');
+            const turnSymbol = document.getElementById('turnSymbol');
+            const turnDisplay = document.getElementById('turnDisplay');
+            
+            if (gameState.isOnline) {
+                const isMyTurn = gameState.currentPlayer === gameState.mySymbol;
+                turnText.textContent = isMyTurn ? "Your Turn" : "Opponent's Turn";
+                turnSymbol.textContent = gameState.currentPlayer === 'X' ? '✕' : '◯';
+                turnSymbol.style.color = gameState.currentPlayer === 'X' ? '#ff6b9d' : '#00d9ff';
+            } else {
+                const currentName = gameState.currentPlayer === 'X' ? gameState.p1Name : gameState.p2Name;
+                turnText.textContent = currentName + "'s Turn";
+                turnSymbol.textContent = gameState.currentPlayer === 'X' ? '✕' : '◯';
+                turnSymbol.style.color = gameState.currentPlayer === 'X' ? '#ff6b9d' : '#00d9ff';
+            }
+            
+            // Add animation
+            turnDisplay.style.animation = 'none';
+            setTimeout(() => {
+                turnDisplay.style.animation = 'turnPulse 0.5s ease';
+            }, 10);
         }
 
         // Game Functions
@@ -430,6 +527,7 @@
             updateScoreDisplay();
             hideAll();
             document.getElementById('gameScreen').classList.remove('hidden');
+            updateTurnDisplay();
         }
 
         function resetGame() {
@@ -437,6 +535,7 @@
             gameState.currentPlayer = 'X';
             gameState.isGameOver = false;
             renderBoard();
+            updateTurnDisplay();
             document.querySelectorAll('.win-line').forEach(line => line.remove());
         }
 
@@ -478,6 +577,7 @@
                 endGame('draw');
             } else {
                 gameState.currentPlayer = gameState.currentPlayer === 'X' ? 'O' : 'X';
+                updateTurnDisplay();
                 if (gameState.gameMode === 'computer' && gameState.currentPlayer === 'O') {
                     setTimeout(computerMove, 800);
                 }
@@ -541,6 +641,9 @@
 
         function closeModal() {
             document.getElementById('winModal').classList.add('hidden');
+            if (gameState.isOnline) {
+                socket.emit('requestRematch', { roomCode: gameState.gameCode });
+            }
             resetGame();
         }
 
@@ -550,8 +653,8 @@
         }
 
         function updateScoreDisplay() {
-            document.getElementById('scoreDisplay').textContent = 
-                `${gameState.scores.p1}:${gameState.scores.p2}`;
+            document.getElementById('p1Score').textContent = gameState.scores.p1;
+            document.getElementById('p2Score').textContent = gameState.scores.p2;
         }
 
         function showStats() {
@@ -641,6 +744,7 @@
             updateScoreDisplay();
             hideAll();
             document.getElementById('gameScreen').classList.remove('hidden');
+            updateTurnDisplay();
         }
     </script>
 </body>
