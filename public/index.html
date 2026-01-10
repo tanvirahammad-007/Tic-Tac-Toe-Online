@@ -3,224 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Tic-Tac-Toe - Online Multiplayer</title>
+    <title>TicTacToe Online</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="grid-background"></div>
-    
-    <!-- Audio Element -->
-    <audio id="bgMusic" loop></audio>
-    
-    <div class="container">
-        <!-- Menu Screen -->
-        <div id="menuScreen" class="menu-screen">
-            <div class="game-header">
-                <h1>TIC-TAC-TOE</h1>
-            </div>
-            
-            <div class="menu-buttons">
-                <button class="neon-btn" onclick="showDifficultySelection()">
-                    <span class="icon">👤</span>
-                    <span>VS</span>
-                    <span class="icon">💻</span>
-                </button>
-                <button class="neon-btn" onclick="showNameInput()">
-                    <span class="icon">👤</span>
-                    <span>VS</span>
-                    <span class="icon">👤</span>
-                    <span style="font-size: 0.7em; opacity: 0.8;">(Local)</span>
-                </button>
-                <button class="neon-btn" onclick="showOnlineMenu()">
-                    <span class="icon">🌐</span>
-                    <span>Online Match</span>
-                    <span class="icon">🔗</span>
-                </button>
-                <button class="neon-btn" onclick="showStats()">
-                    <span class="icon">📊</span>
-                    <span>Statistics</span>
-                </button>
-                <button class="neon-btn" onclick="showAbout()">
-                    <span class="icon">ℹ️</span>
-                    <span>About</span>
-                </button>
-            </div>
+    <audio id="bgMusic" loop>
+        <source src="background-music.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Menu Screen -->
+    <div id="menuScreen" class="menu-screen">
+        <h1>TicTacToe</h1>
+        <button onclick="showDifficultySelection()">🤖 vs Computer</button>
+        <button onclick="showNameInput()">👥 2 Players</button>
+        <button onclick="showOnlineMenu()">🌐 Play Online</button>
+        <button onclick="showStats()">📊 Statistics</button>
+        <button onclick="showSettings()">⚙️ Settings</button>
+        <button onclick="showAbout()">ℹ️ About</button>
+    </div>
+
+    <!-- Difficulty Selection -->
+    <div id="difficultyScreen" class="menu-screen hidden">
+        <h1>Select Difficulty</h1>
+        <button onclick="startGame('computer', 'easy')">😊 Easy</button>
+        <button onclick="startGame('computer', 'medium')">😐 Medium</button>
+        <button onclick="startGame('computer', 'hard')">😈 Hard</button>
+        <button onclick="showMenu()">🔙 Back</button>
+    </div>
+
+    <!-- Name Input -->
+    <div id="nameInputScreen" class="name-input-screen hidden">
+        <h1>Enter Names</h1>
+        <input type="text" id="p1Input" placeholder="Player 1 Name" maxlength="15">
+        <input type="text" id="p2Input" placeholder="Player 2 Name" maxlength="15">
+        <button onclick="startGame('twoPlayer')">Start Game</button>
+        <button onclick="showMenu()">🔙 Back</button>
+    </div>
+
+    <!-- Online Menu -->
+    <div id="onlineMenuScreen" class="menu-screen hidden">
+        <h1>Online Multiplayer</h1>
+        <button onclick="showCreateGame()">🎮 Create Game</button>
+        <button onclick="showJoinGame()">🔗 Join Game</button>
+        <button onclick="showMenu()">🔙 Back</button>
+    </div>
+
+    <!-- Create Game -->
+    <div id="createGameScreen" class="menu-screen hidden">
+        <h1>Create Game</h1>
+        <input type="text" id="hostNameInput" placeholder="Your Name" maxlength="15">
+        <button onclick="createOnlineGame()">Create Room</button>
+        <div id="gameCodeSection" class="hidden">
+            <h2>Game Code:</h2>
+            <div id="gameCodeDisplay" class="game-code"></div>
+            <button onclick="copyGameCode()">📋 Copy Code</button>
+            <p>Waiting for opponent...</p>
         </div>
+        <button onclick="showOnlineMenu()">🔙 Back</button>
+    </div>
 
-        <!-- Difficulty Screen -->
-        <div id="difficultyScreen" class="menu-screen hidden">
-            <button class="back-btn" onclick="showMenu()">
-                <span class="arrow-icon">←</span>
-            </button>
-            <h2 class="screen-title">Select Difficulty</h2>
-            <input type="text" id="playerNameInput" placeholder="Enter Your Name" class="neon-input">
-            <div class="menu-buttons">
-                <button class="neon-btn" onclick="startGame('computer', 'easy')">😊 Easy</button>
-                <button class="neon-btn" onclick="startGame('computer', 'medium')">😐 Medium</button>
-                <button class="neon-btn" onclick="startGame('computer', 'hard')">😈 Unbeatable</button>
-            </div>
-        </div>
+    <!-- Join Game -->
+    <div id="joinGameScreen" class="menu-screen hidden">
+        <h1>Join Game</h1>
+        <input type="text" id="joinNameInput" placeholder="Your Name" maxlength="15">
+        <input type="text" id="gameCodeInput" placeholder="Enter Game Code" maxlength="6">
+        <div id="joinError" class="error-message hidden"></div>
+        <button onclick="joinOnlineGame()">Join Game</button>
+        <button onclick="showOnlineMenu()">🔙 Back</button>
+    </div>
 
-        <!-- Name Input Screen -->
-        <div id="nameInputScreen" class="name-input-screen hidden">
-            <button class="back-btn" onclick="showMenu()">
-                <span class="arrow-icon">←</span>
-            </button>
-            <h2 class="screen-title">Enter Names</h2>
-            <input type="text" id="p1Input" placeholder="Player 1 Name" class="neon-input">
-            <input type="text" id="p2Input" placeholder="Player 2 Name" class="neon-input">
-            <button class="neon-btn" onclick="startGame('2player')">Start Game</button>
-        </div>
-
-        <!-- Game Screen -->
-        <div id="gameScreen" class="game-screen hidden">
-            <button class="back-btn" onclick="showMenu()">
-                <span class="arrow-icon">←</span>
-            </button>
-
+    <!-- Game Screen -->
+    <div id="gameScreen" class="game-screen hidden">
+        <div class="game-header">
+            <button onclick="showMenu()">🏠 Home</button>
             <div class="score-display">
-                <div class="player-score">
-                    <div class="symbol-x">✕</div>
-                    <div class="player-name" id="p1NameDisplay">Player one</div>
-                </div>
-                <div class="score-center">
-                    <span id="scoreDisplay">0:0</span>
-                </div>
-                <div class="player-score">
-                    <div class="symbol-o">○</div>
-                    <div class="player-name" id="p2NameDisplay">Player two</div>
-                </div>
+                <span id="p1NameDisplay">Player 1</span>
+                <span id="scoreDisplay">0:0</span>
+                <span id="p2NameDisplay">Player 2</span>
             </div>
-
-            <div class="turn-indicator">
-                <span class="turn-line"></span>
-            </div>
-
-            <div id="board" class="board"></div>
+            <button onclick="showSettingsFromGame()">⚙️</button>
         </div>
+        <div id="board" class="board"></div>
+    </div>
 
-        <!-- Stats Screen -->
-        <div id="statsScreen" class="stats-screen hidden">
-            <button class="back-btn" onclick="showMenu()">
-                <span class="arrow-icon">←</span>
-            </button>
-            <h2 class="screen-title">Statistics</h2>
-            <div class="stats-grid" id="statsGrid"></div>
-            <button class="neon-btn" style="margin: 20px;" onclick="resetStats()">Reset Statistics</button>
-        </div>
+    <!-- Stats Screen -->
+    <div id="statsScreen" class="stats-screen hidden">
+        <h1>Statistics</h1>
+        <div id="statsGrid" class="stats-grid"></div>
+        <button onclick="resetStats()">🗑️ Reset Stats</button>
+        <button onclick="showMenu()">🔙 Back</button>
+    </div>
 
-        <!-- Settings Screen -->
-        <div id="settingsScreen" class="settings-screen hidden">
-            <button class="back-btn" onclick="backFromSettings()">
-                <span class="arrow-icon">←</span>
-            </button>
-            <h2 class="screen-title">Settings</h2>
-            <div style="padding: 20px;">
-                <div style="margin-bottom: 20px;">
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <div id="musicToggle" class="toggle-switch">
-                            <div class="toggle-slider"></div>
-                        </div>
-                        <span>Background Music</span>
-                    </label>
-                </div>
-            </div>
-            <button class="neon-btn" style="margin: 20px;" onclick="showStatsFromSettings()">View Statistics</button>
-        </div>
-
-        <!-- About Screen -->
-        <div id="aboutScreen" class="about-screen hidden">
-            <button class="back-btn" onclick="showMenu()">
-                <span class="arrow-icon">←</span>
-            </button>
-            <h2 class="screen-title">About Game</h2>
-            <div class="about-content">
-                <div class="about-section">
-                    <h3 class="about-subtitle">🎮 How to Play</h3>
-                    <p>Tic-Tac-Toe is a classic game for two players. Players take turns marking spaces in a 3×3 grid with X or O. The first player to get three marks in a row (horizontally, vertically, or diagonally) wins the game!</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3 class="about-subtitle">🎯 Game Modes</h3>
-                    <p><strong>VS Computer:</strong> Play against AI with three difficulty levels - Easy, Medium, and Unbeatable!</p>
-                    <p><strong>VS Player (Local):</strong> Challenge your friends in local multiplayer mode.</p>
-                    <p><strong>Online Match:</strong> Play with friends remotely by sharing a game code!</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3 class="about-subtitle">✨ Features</h3>
-                    <p>• Stunning neon pixel-art design</p>
-                    <p>• Track your wins and statistics</p>
-                    <p>• Fully responsive - play on any device</p>
-                    <p>• Smart AI opponent with minimax algorithm</p>
-                    <p>• Real-time online multiplayer with Firebase</p>
-                </div>
-                
-                <div class="about-footer">
-                    <p>Created by Team Believers✨</p>
-                </div>
+    <!-- Settings Screen -->
+    <div id="settingsScreen" class="settings-screen hidden">
+        <h1>Settings</h1>
+        <div class="setting-item">
+            <span>🎵 Music</span>
+            <div id="musicToggle" class="toggle">
+                <span>🔊</span>
             </div>
         </div>
+        <button onclick="showStatsFromSettings()">📊 View Statistics</button>
+        <button onclick="backFromSettings()">🔙 Back</button>
+    </div>
 
-        <!-- Online Menu Screen -->
-        <div id="onlineMenuScreen" class="menu-screen hidden">
-            <button class="back-btn" onclick="showMenu()">
-                <span class="arrow-icon">←</span>
-            </button>
-            <h2 class="screen-title">Online Match</h2>
-            <div class="menu-buttons">
-                <button class="neon-btn" onclick="showCreateGame()">
-                    <span class="icon">➕</span>
-                    <span>Create Game</span>
-                </button>
-                <button class="neon-btn" onclick="showJoinGame()">
-                    <span class="icon">🔓</span>
-                    <span>Join Game</span>
-                </button>
-            </div>
-            <div class="neon-input" style="margin-top: 20px; padding: 15px; text-align: center; border-style: dashed;">
-                <p style="font-size: 0.9em; margin-bottom: 10px;">How to play online:</p>
-                <p style="font-size: 0.8em; opacity: 0.7;">1. One player creates a game and gets a code</p>
-                <p style="font-size: 0.8em; opacity: 0.7;">2. Share the 6-digit code with your friend</p>
-                <p style="font-size: 0.8em; opacity: 0.7;">3. Friend joins using the code</p>
-            </div>
-        </div>
-
-        <!-- Create Game Screen -->
-        <div id="createGameScreen" class="menu-screen hidden">
-            <button class="back-btn" onclick="showOnlineMenu()">
-                <span class="arrow-icon">←</span>
-            </button>
-            <h2 class="screen-title">Create Game</h2>
-            <input type="text" id="hostNameInput" placeholder="Enter Your Name" class="neon-input">
-            <button class="neon-btn" onclick="createOnlineGame()">Create Game</button>
-            <div id="gameCodeSection" class="game-code-display hidden">
-                <div class="code-label">Your Game Code:</div>
-                <div class="game-code" id="gameCodeDisplay">------</div>
-                <button class="neon-btn small-btn" onclick="copyGameCode()" style="margin-top: 15px;">
-                    <span>📋 Copy Code</span>
-                </button>
-                <div class="waiting-message">
-                    <div class="spinner"></div>
-                    <p>Waiting for opponent to join...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Join Game Screen -->
-        <div id="joinGameScreen" class="menu-screen hidden">
-            <button class="back-btn" onclick="showOnlineMenu()">
-                <span class="arrow-icon">←</span>
-            </button>
-            <h2 class="screen-title">Join Game</h2>
-            <input type="text" id="joinNameInput" placeholder="Enter Your Name" class="neon-input">
-            <input type="text" id="gameCodeInput" placeholder="Enter Game Code" class="neon-input" maxlength="6" style="text-transform: uppercase;">
-            <button class="neon-btn" onclick="joinOnlineGame()">
-                <span class="icon">🚀</span>
-                <span>Join Game</span>
-            </button>
-            <div id="joinError" class="error-message hidden"></div>
-        </div>
+    <!-- About Screen -->
+    <div id="aboutScreen" class="about-screen hidden">
+        <h1>About</h1>
+        <p>TicTacToe Online - Version 1.0</p>
+        <p>A classic game with online multiplayer!</p>
+        <button onclick="showMenu()">🔙 Back</button>
     </div>
 
     <!-- Win Modal -->
@@ -235,10 +127,494 @@
         </div>
     </div>
 
-<!-- Add this line BEFORE your module script -->
-<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-
-<script type="module" src="/src/index.js"></script>
+    <!-- Socket.io -->
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
     
+    <!-- Game Logic -->
+    <script>
+        // Socket.io connection - UPDATE THIS URL
+        const BACKEND_URL = 'https://tictactoe-test-p2ok.onrender.com';
+        let socket = null;
+
+        // Initialize Socket.io
+        function initSocket() {
+            if (!socket) {
+                socket = io(BACKEND_URL, {
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionAttempts: 5
+                });
+
+                socket.on('connect', () => {
+                    console.log('Connected to server!');
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('Disconnected from server');
+                });
+
+                socket.on('connect_error', (error) => {
+                    console.error('Connection error:', error);
+                });
+
+                setupSocketEventHandlers();
+            }
+            return socket;
+        }
+
+        function setupSocketEventHandlers() {
+            socket.on('roomCreated', ({ roomCode, symbol }) => {
+                gameState.gameCode = roomCode;
+                gameState.mySymbol = symbol;
+                gameState.isHost = true;
+                document.getElementById('gameCodeDisplay').textContent = roomCode;
+                document.getElementById('gameCodeSection').classList.remove('hidden');
+            });
+
+            socket.on('playerJoined', ({ players }) => {
+                if (players.length === 2) {
+                    gameState.p2Name = players[1].name;
+                    startOnlineGame();
+                }
+            });
+
+            socket.on('gameStart', ({ players, currentTurn }) => {
+                gameState.currentPlayer = currentTurn;
+                startOnlineGame();
+            });
+
+            socket.on('moveMade', ({ board, currentTurn }) => {
+                gameState.board = board;
+                gameState.currentPlayer = currentTurn;
+                renderBoard();
+                
+                const winner = checkWin(gameState.board, currentTurn === 'X' ? 'O' : 'X');
+                if (winner) {
+                    endGame(currentTurn === 'X' ? 'O' : 'X', winner.combo);
+                } else if (gameState.board.every(b => b)) {
+                    endGame('draw');
+                }
+            });
+
+            socket.on('gameOver', ({ winner }) => {
+                if (winner === 'draw') {
+                    endGame('draw');
+                } else {
+                    const winCombo = findWinningCombo(gameState.board, winner);
+                    endGame(winner, winCombo);
+                }
+            });
+
+            socket.on('error', (message) => {
+                alert(message);
+                showOnlineMenu();
+            });
+
+            socket.on('opponentDisconnected', () => {
+                alert('Your opponent has disconnected!');
+                showMenu();
+            });
+        }
+
+        function findWinningCombo(board, player) {
+            for (let combo of winCombos) {
+                if (combo.every(idx => board[idx] === player)) {
+                    return combo;
+                }
+            }
+            return null;
+        }
+
+        // Game State
+        const gameState = {
+            board: Array(9).fill(null),
+            currentPlayer: 'X',
+            gameMode: null,
+            difficulty: null,
+            p1Name: 'Player 1',
+            p2Name: 'Player 2',
+            isGameOver: false,
+            stats: JSON.parse(localStorage.getItem('ttt_stats')) || {
+                total: 0,
+                p1Wins: 0,
+                p2Wins: 0,
+                draws: 0
+            },
+            scores: { p1: 0, p2: 0 },
+            musicEnabled: localStorage.getItem('ttt_music') === 'true',
+            fromGame: false,
+            isOnline: false,
+            gameCode: null,
+            isHost: false,
+            mySymbol: null
+        };
+
+        const winCombos = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        // Initialize
+        window.addEventListener('load', () => {
+            showMenu();
+            initMusic();
+            setupMusicToggle();
+        });
+
+        // Music
+        function setupMusicToggle() {
+            const toggle = document.getElementById('musicToggle');
+            if (toggle) {
+                toggle.addEventListener('click', toggleMusic);
+                if (gameState.musicEnabled) {
+                    toggle.parentElement.classList.add('active');
+                }
+            }
+        }
+
+        function initMusic() {
+            if (gameState.musicEnabled) {
+                playMusic();
+            }
+        }
+
+        function toggleMusic() {
+            gameState.musicEnabled = !gameState.musicEnabled;
+            localStorage.setItem('ttt_music', gameState.musicEnabled);
+            const toggle = document.getElementById('musicToggle');
+            if (gameState.musicEnabled) {
+                toggle.parentElement.classList.add('active');
+                playMusic();
+            } else {
+                toggle.parentElement.classList.remove('active');
+                pauseMusic();
+            }
+        }
+
+        function playMusic() {
+            const audio = document.getElementById('bgMusic');
+            if (audio && gameState.musicEnabled) {
+                audio.play().catch(e => console.log('Audio play failed:', e));
+            }
+        }
+
+        function pauseMusic() {
+            const audio = document.getElementById('bgMusic');
+            if (audio) audio.pause();
+        }
+
+        // Navigation
+        function showMenu() {
+            hideAll();
+            gameState.fromGame = false;
+            if (gameState.isOnline && socket) {
+                socket.disconnect();
+                socket = null;
+            }
+            gameState.isOnline = false;
+            document.getElementById('menuScreen').classList.remove('hidden');
+        }
+
+        function showDifficultySelection() {
+            hideAll();
+            document.getElementById('difficultyScreen').classList.remove('hidden');
+        }
+
+        function showNameInput() {
+            hideAll();
+            document.getElementById('nameInputScreen').classList.remove('hidden');
+        }
+
+        function showSettings() {
+            hideAll();
+            document.getElementById('settingsScreen').classList.remove('hidden');
+        }
+
+        function showSettingsFromGame() {
+            gameState.fromGame = true;
+            hideAll();
+            document.getElementById('settingsScreen').classList.remove('hidden');
+        }
+
+        function backFromSettings() {
+            if (gameState.fromGame) {
+                backToGame();
+            } else {
+                showMenu();
+            }
+        }
+
+        function backToGame() {
+            hideAll();
+            document.getElementById('gameScreen').classList.remove('hidden');
+        }
+
+        function showStatsFromSettings() {
+            hideAll();
+            showStats();
+        }
+
+        function showAbout() {
+            hideAll();
+            document.getElementById('aboutScreen').classList.remove('hidden');
+        }
+
+        function showOnlineMenu() {
+            hideAll();
+            document.getElementById('onlineMenuScreen').classList.remove('hidden');
+        }
+
+        function showCreateGame() {
+            hideAll();
+            document.getElementById('createGameScreen').classList.remove('hidden');
+            document.getElementById('gameCodeSection').classList.add('hidden');
+        }
+
+        function showJoinGame() {
+            hideAll();
+            document.getElementById('joinGameScreen').classList.remove('hidden');
+            document.getElementById('joinError').classList.add('hidden');
+        }
+
+        function hideAll() {
+            document.querySelectorAll('.menu-screen, .name-input-screen, .game-screen, .stats-screen, .settings-screen, .about-screen')
+                .forEach(s => s.classList.add('hidden'));
+        }
+
+        // Game Functions
+        function startGame(mode, diff = null) {
+            gameState.gameMode = mode;
+            gameState.difficulty = diff;
+            gameState.scores = { p1: 0, p2: 0 };
+
+            if (mode === 'computer') {
+                gameState.p1Name = 'You';
+                gameState.p2Name = 'Computer';
+            } else {
+                gameState.p1Name = document.getElementById('p1Input').value.trim() || 'Player 1';
+                gameState.p2Name = document.getElementById('p2Input').value.trim() || 'Player 2';
+            }
+
+            document.getElementById('p1NameDisplay').textContent = gameState.p1Name;
+            document.getElementById('p2NameDisplay').textContent = gameState.p2Name;
+
+            resetGame();
+            updateScoreDisplay();
+            hideAll();
+            document.getElementById('gameScreen').classList.remove('hidden');
+        }
+
+        function resetGame() {
+            gameState.board = Array(9).fill(null);
+            gameState.currentPlayer = 'X';
+            gameState.isGameOver = false;
+            renderBoard();
+            document.querySelectorAll('.win-line').forEach(line => line.remove());
+        }
+
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+
+            gameState.board.forEach((cell, i) => {
+                const div = document.createElement('div');
+                div.className = `cell ${cell ? 'taken ' + cell : ''}`;
+                div.textContent = cell || '';
+                div.onclick = () => handleMove(i);
+                boardEl.appendChild(div);
+            });
+        }
+
+        function handleMove(i) {
+            if (gameState.isGameOver || gameState.board[i]) return;
+
+            if (gameState.isOnline) {
+                if (gameState.currentPlayer !== gameState.mySymbol) return;
+            }
+
+            gameState.board[i] = gameState.currentPlayer;
+            renderBoard();
+
+            if (gameState.isOnline) {
+                socket.emit('makeMove', {
+                    roomCode: gameState.gameCode,
+                    index: i
+                });
+                return;
+            }
+
+            const winner = checkWin(gameState.board, gameState.currentPlayer);
+            if (winner) {
+                endGame(gameState.currentPlayer, winner.combo);
+            } else if (gameState.board.every(b => b)) {
+                endGame('draw');
+            } else {
+                gameState.currentPlayer = gameState.currentPlayer === 'X' ? 'O' : 'X';
+                if (gameState.gameMode === 'computer' && gameState.currentPlayer === 'O') {
+                    setTimeout(computerMove, 800);
+                }
+            }
+        }
+
+        function checkWin(board, player) {
+            for (let combo of winCombos) {
+                if (combo.every(idx => board[idx] === player)) {
+                    return { combo };
+                }
+            }
+            return null;
+        }
+
+        function computerMove() {
+            const avail = gameState.board
+                .map((v, i) => v === null ? i : null)
+                .filter(v => v !== null);
+            const move = avail[Math.floor(Math.random() * avail.length)];
+            handleMove(move);
+        }
+
+        function endGame(result, winCombo = null) {
+            gameState.isGameOver = true;
+            gameState.stats.total++;
+
+            if (result === 'draw') {
+                gameState.stats.draws++;
+                showWinModal('Draw!', '🤝');
+            } else {
+                if (result === 'X') {
+                    gameState.scores.p1++;
+                    gameState.stats.p1Wins++;
+                } else {
+                    gameState.scores.p2++;
+                    gameState.stats.p2Wins++;
+                }
+
+                const winnerName = result === 'X' ? gameState.p1Name : gameState.p2Name;
+                const symbol = result === 'X' ? '✕' : '◯';
+                const color = result === 'X' ? '#ff6b9d' : '#00d9ff';
+
+                showWinModal(winnerName, symbol, color);
+            }
+
+            updateScoreDisplay();
+            localStorage.setItem('ttt_stats', JSON.stringify(gameState.stats));
+        }
+
+        function showWinModal(text, symbol, color = '#00d9ff') {
+            const modal = document.getElementById('winModal');
+            const symbolEl = document.getElementById('winnerSymbol');
+            const textEl = document.getElementById('winnerText');
+            
+            symbolEl.textContent = symbol;
+            symbolEl.style.color = color;
+            textEl.textContent = text;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('winModal').classList.add('hidden');
+            resetGame();
+        }
+
+        function goHomeFromModal() {
+            document.getElementById('winModal').classList.add('hidden');
+            showMenu();
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('scoreDisplay').textContent = 
+                `${gameState.scores.p1}:${gameState.scores.p2}`;
+        }
+
+        function showStats() {
+            hideAll();
+            const s = gameState.stats;
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Games</h3>
+                    <p>${s.total}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Player 1 Wins</h3>
+                    <p>${s.p1Wins}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Player 2 Wins</h3>
+                    <p>${s.p2Wins}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Draws</h3>
+                    <p>${s.draws}</p>
+                </div>
+            `;
+            document.getElementById('statsScreen').classList.remove('hidden');
+        }
+
+        function resetStats() {
+            if (confirm("Reset all statistics?")) {
+                gameState.stats = { total: 0, p1Wins: 0, p2Wins: 0, draws: 0 };
+                localStorage.setItem('ttt_stats', JSON.stringify(gameState.stats));
+                showStats();
+            }
+        }
+
+        // Online Functions
+        function createOnlineGame() {
+            const hostName = document.getElementById('hostNameInput').value.trim();
+            if (!hostName) {
+                alert('Please enter your name!');
+                return;
+            }
+
+            initSocket();
+            gameState.isOnline = true;
+            gameState.p1Name = hostName;
+
+            hideAll();
+            document.getElementById('createGameScreen').classList.remove('hidden');
+            socket.emit('createRoom', hostName);
+        }
+
+        function copyGameCode() {
+            const code = gameState.gameCode;
+            navigator.clipboard.writeText(code).then(() => {
+                alert(`Code ${code} copied!`);
+            }).catch(() => {
+                alert(`Game code: ${code}`);
+            });
+        }
+
+        function joinOnlineGame() {
+            const guestName = document.getElementById('joinNameInput').value.trim();
+            const code = document.getElementById('gameCodeInput').value.trim().toUpperCase();
+
+            if (!guestName || !code) {
+                alert('Please enter your name and game code!');
+                return;
+            }
+
+            initSocket();
+            gameState.isOnline = true;
+            gameState.gameCode = code;
+            gameState.p2Name = guestName;
+            gameState.mySymbol = 'O';
+
+            socket.emit('joinRoom', { roomCode: code, playerName: guestName });
+        }
+
+        function startOnlineGame() {
+            gameState.gameMode = 'online';
+            gameState.scores = { p1: 0, p2: 0 };
+
+            document.getElementById('p1NameDisplay').textContent = gameState.p1Name;
+            document.getElementById('p2NameDisplay').textContent = gameState.p2Name;
+
+            resetGame();
+            updateScoreDisplay();
+            hideAll();
+            document.getElementById('gameScreen').classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>
