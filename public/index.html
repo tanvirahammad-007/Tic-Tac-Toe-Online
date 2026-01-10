@@ -4,12 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TicTacToe Online</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <audio id="bgMusic" loop>
         <source src="background-music.mp3" type="audio/mpeg">
     </audio>
+
+    <!-- Intro Screen -->
+    <div id="introScreen" class="intro-screen">
+        <div class="intro-content">
+            <div class="intro-logo">
+                <div class="intro-symbol x-symbol">✕</div>
+                <div class="intro-vs">VS</div>
+                <div class="intro-symbol o-symbol">◯</div>
+            </div>
+            <h1 class="intro-title">TicTacToe</h1>
+            <p class="intro-subtitle">The Ultimate Neon Experience</p>
+            <div class="intro-loader">
+                <div class="loader-bar"></div>
+            </div>
+            <p class="intro-text">Loading Game...</p>
+        </div>
+    </div>
 
     <!-- Menu Screen -->
     <div id="menuScreen" class="menu-screen">
@@ -301,7 +319,9 @@
 
         // Initialize
         window.addEventListener('load', () => {
-            showMenu();
+            // Show intro first
+            showIntro();
+            
             initMusic();
             setupMusicToggle();
             setupVolumeControl();
@@ -313,6 +333,21 @@
                 }
             }, { once: true });
         });
+
+        // Intro Animation
+        function showIntro() {
+            const intro = document.getElementById('introScreen');
+            intro.classList.remove('hidden');
+            
+            // Hide intro and show menu after 3 seconds
+            setTimeout(() => {
+                intro.classList.add('fade-out');
+                setTimeout(() => {
+                    intro.classList.add('hidden');
+                    showMenu();
+                }, 800);
+            }, 3000);
+        }
 
         // Volume Control
         function setupVolumeControl() {
