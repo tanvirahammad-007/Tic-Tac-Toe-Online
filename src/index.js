@@ -2,7 +2,7 @@
 import { db } from './firebase-config.js';
 
 // Socket.io connection - UPDATE THIS URL WITH YOUR RENDER BACKEND URL
-const BACKEND_URL = 'https://your-backend-name.onrender.com'; // ⚠️ CHANGE THIS!
+const BACKEND_URL = 'https://tictactoe-test-p2ok.onrender.com/'; // ⚠️ CHANGE THIS!
 let socket = null;
 
 // Initialize Socket.io connection
