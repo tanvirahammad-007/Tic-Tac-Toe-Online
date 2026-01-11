@@ -1,66 +1,115 @@
-# 🎮 Neon Tic-Tac-Toe - Online Multiplayer
 
-A stunning neon-themed Tic-Tac-Toe game with online multiplayer functionality using Firebase Realtime Database.
+# 🎮 Neon Tic-Tac-Toe – Online Multiplayer
 
-## ✨ Features
+A modern **neon-styled Tic-Tac-Toe game** with **AI modes, local play, and real-time online multiplayer**, built using **HTML, CSS, JavaScript, and Firebase**.
 
-- 🎨 Beautiful neon pixel-art design
-- 🤖 Play against AI (Easy, Medium, Unbeatable)
-- 👥 Local 2-player mode
-- 🌐 Online multiplayer with game codes
-- 📊 Statistics tracking
-- 📱 Fully responsive design
-- 🔥 Real-time synchronization with Firebase
+---
+
+## ✨ Current Features (Live Website)
+
+* 🎨 **Neon pixel-art UI** with glowing effects
+* 🤖 **VS Computer (AI)**
+
+  * Easy
+  * Medium
+  * Hard / Unbeatable
+* 👥 **Local 2-Player Mode** (Play on the same device)
+* 🌐 **Online Multiplayer**
+
+  * Create a game room
+  * Join using a **6-digit game code**
+  * Real-time gameplay using **Firebase Realtime Database**
+* ⚙️ **Settings Panel**
+
+  * Background music ON / OFF
+  * Volume control
+* 📊 **Game Statistics**
+
+  * Wins, losses, and match tracking
+* 📱 **Fully Responsive Design**
+
+  * Works on desktop, tablet, and mobile
+* 🔥 **Smooth animations & sound effects**
+
+---
 
 ## 🚀 Live Demo
 
-[Play Now](https://your-app-name.netlify.app)
+🔗 **Play Now:**
+👉 [https://tictactoe-test128.netlify.app/](https://tictactoe-test128.netlify.app/)
+
+---
 
 ## 🛠️ Technologies Used
 
-- HTML5, CSS3, JavaScript (ES6+)
-- Firebase Realtime Database
-- Netlify (Hosting)
+* **HTML5**
+* **CSS3**
+* **JavaScript (ES6+)**
+* **Firebase Realtime Database**
+* **Netlify** (Deployment & Hosting)
 
-## 📦 Installation
+---
 
-1. Clone the repository:
+## 📦 Installation (Local Setup)
+
+1. **Clone the repository**
+
 ```bash
-git clone https://github.com/yourusername/tictactoe-online.git
-cd tictactoe-online
+git clone https://github.com/tanvirahammad-007/tictactoe.git
+cd tictactoe
 ```
 
-2. Install dependencies:
+2. **Install dependencies**
+
 ```bash
 npm install
 ```
 
-3. Set up Firebase:
-   - Create a Firebase project
-   - Enable Realtime Database
-   - Copy your config to `src/firebase-config.js`
+3. **Firebase Setup**
 
-4. Run locally:
+* Create a Firebase project
+* Enable **Realtime Database**
+* Add your Firebase config inside the project (e.g. `firebase-config.js`)
+
+4. **Run locally**
+
 ```bash
 npm start
 ```
 
-5. Open `http://localhost:3000`
+5. Open in browser:
 
-## 🎮 How to Play Online
-
-1. **Create Game**: Click "Online Match" → "Create Game" → Share the 6-digit code
-2. **Join Game**: Click "Online Match" → "Join Game" → Enter the code
-3. **Play**: Take turns playing from different devices!
-
-## 📝 License
-
-MIT License - feel free to use this project!
-
-## 👨‍💻 Created By
-
-Team Believers ✨
+```
+http://localhost:3000
+```
 
 ---
 
-⭐ Star this repo if you like it!
+## 🎮 How to Play Online Multiplayer
+
+1. Click **Online Match**
+2. Choose **Create Game**
+3. Share the **6-digit room code** with your friend
+4. Friend selects **Join Game** and enters the code
+5. Play in real-time from different devices 🌍
+
+---
+
+## 📝 License
+
+**MIT License**
+You are free to use, modify, and distribute this project.
+
+---
+
+## 👨‍💻 Created By
+
+**Team Believers ✨**
+
+---
+
+⭐ **Star this repository if you like the game!**
+
+
+
+Just tell me, *My Helper is ready* 😊
